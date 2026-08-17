@@ -1,21 +1,29 @@
-const PERSONA_META: Record<string, { emoji: string; title: string }> = {
-  student: { emoji: "🎓", title: "Academic Assistant" },
-  parent: { emoji: "💛", title: "Parent Support Assistant" },
-  teacher: { emoji: "🧑‍🏫", title: "Teaching Assistant" },
-  principal: { emoji: "🏫", title: "Management Assistant" },
+import Avatar, { type AvatarState } from "./Avatar";
+
+const PERSONA_META: Record<string, { title: string }> = {
+  student: { title: "Academic Assistant" },
+  parent: { title: "Parent Support Assistant" },
+  teacher: { title: "Teaching Assistant" },
+  principal: { title: "Management Assistant" },
 };
 
-export default function PersonaHeader({ role, name }: { role: string; name: string }) {
-  const meta = PERSONA_META[role] ?? { emoji: "🤖", title: "Assistant" };
+export default function PersonaHeader({
+  role,
+  name,
+  avatarState = "idle",
+}: {
+  role: string;
+  name: string;
+  avatarState?: AvatarState;
+}) {
+  const meta = PERSONA_META[role] ?? { title: "Assistant" };
   return (
     <header className="persona-header">
-      <span className="persona-avatar" aria-hidden>
-        {meta.emoji}
-      </span>
+      <Avatar role={role} state={avatarState} size={44} />
       <div>
         <div className="persona-title">XYZ AI · {meta.title}</div>
         <div className="persona-subtitle">
-          Signed in as {name} ({role})
+          {name} · {role}
         </div>
       </div>
     </header>
