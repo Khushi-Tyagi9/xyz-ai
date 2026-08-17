@@ -59,8 +59,24 @@ Suggested run-through for the demo video/live demo. ~5-6 minutes.
 - Switch the language dropdown to **Hindi** (or another language)
 - Ask the same attendance question, show the reply comes back in that language
 
+## 8. Voice + avatar (45s)
+
+- Click the mic button in the composer, speak a question out loud (e.g. "What
+  is my attendance?") — point out the avatar's pulsing "listening" ring and
+  the live transcript filling the input
+- Toggle the speaker icon on, send another message, and let the assistant's
+  reply play back as speech — point out the avatar's "speaking" animation
+  synced to playback
+
+## 9. Portal integration (20s)
+
+- Open `student-portal/index.html` (or any of the 4 portal stubs) in a
+  browser, click "💬 Ask XYZ AI" to show the assistant embedded in a
+  placeholder host app — demonstrates the intended integration pattern for
+  the other 4 repos in the spec's structure
+
 ## Wrap-up (15s)
 
-- Mention Phase 2 (voice + avatar) is architected to layer on the same
-  `/chat` endpoint without backend changes, and Phase 3 covers the remaining
-  languages and wiring the other portal repos as real consumers.
+- Mention conversation memory, RBAC, and the mock ERP are all
+  production-shaped even though the data is mocked, and that swapping in a
+  real ERP/database is a drop-in change behind `mock_services/`.
