@@ -1,0 +1,27 @@
+{
+  "users": [
+    { "user_id": "stu-rahul", "role": "student", "name": "Rahul Sharma", "student_id": "std-101" },
+    { "user_id": "stu-priya", "role": "student", "name": "Priya Verma", "student_id": "std-102" },
+    { "user_id": "par-sunita", "role": "parent", "name": "Sunita Sharma", "linked_student_ids": ["std-101"] },
+    { "user_id": "par-anil", "role": "parent", "name": "Anil Verma", "linked_student_ids": ["std-102"] },
+    { "user_id": "tea-meera", "role": "teacher", "name": "Meera Nair", "teacher_id": "tch-201", "class_ids": ["cls-6a"] },
+    { "user_id": "pri-kapoor", "role": "principal", "name": "Dr. Kapoor", "principal_id": "prin-301" }
+  ],
+  "students": [
+    { "student_id": "std-101", "name": "Rahul Sharma", "class_id": "cls-6a", "attendance_pct": 91.2 },
+    { "student_id": "std-102", "name": "Priya Verma", "class_id": "cls-6a", "attendance_pct": 87.5 },
+    { "student_id": "std-103", "name": "Aman Gupta", "class_id": "cls-6a", "attendance_pct": 95.0 },
+    { "student_id": "std-104", "name": "Sara Khan", "class_id": "cls-6b", "attendance_pct": 78.4 }
+  ],
+  "classes": [
+    { "class_id": "cls-6a", "name": "Class 6-A", "teacher_id": "tch-201" },
+    { "class_id": "cls-6b", "name": "Class 6-B", "teacher_id": "tch-202" }
+  ],
+  "attendance_log": [
+    { "student_id": "std-101", "date": "2026-08-17", "status": "present" },
+    { "student_id": "std-102", "date": "2026-08-17", "status": "present" },
+    { "student_id": "std-103", "date": "2026-08-17", "status": "present" },
+    { "student_id": "std-104", "date": "2026-08-17", "status": "absent" }
+  ],
+  "escalation_requests": []
+}
