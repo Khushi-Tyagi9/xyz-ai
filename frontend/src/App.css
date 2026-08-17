@@ -1,0 +1,211 @@
+.app-shell {
+  max-width: 720px;
+  margin: 0 auto;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  color: #1f2430;
+}
+
+/* ---- Login ---- */
+.login-screen {
+  padding: 2.5rem 1.5rem;
+}
+.login-screen h1 {
+  margin-bottom: 0.25rem;
+}
+.login-subtitle {
+  color: #6b7280;
+  margin-bottom: 1.5rem;
+}
+.role-groups {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+}
+.role-group h2 {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #6b7280;
+  margin-bottom: 0.5rem;
+}
+.user-pick-btn {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 0.6rem 0.8rem;
+  margin-bottom: 0.5rem;
+  border-radius: 10px;
+  border: 1px solid #d8dce3;
+  background: #fff;
+  cursor: pointer;
+  font-size: 0.95rem;
+}
+.user-pick-btn:hover {
+  border-color: #6366f1;
+}
+.user-pick-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+/* ---- Chat ---- */
+.chat-screen {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+.chat-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+.persona-header {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.persona-avatar {
+  font-size: 1.6rem;
+}
+.persona-title {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+.persona-subtitle {
+  font-size: 0.78rem;
+  color: #6b7280;
+}
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.topbar-actions select {
+  padding: 0.3rem 0.4rem;
+  border-radius: 8px;
+  border: 1px solid #d8dce3;
+}
+.logout-btn {
+  border: 1px solid #d8dce3;
+  background: #fff;
+  border-radius: 8px;
+  padding: 0.3rem 0.6rem;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  background: #f7f8fb;
+}
+.bubble-row {
+  display: flex;
+}
+.bubble-row.user {
+  justify-content: flex-end;
+}
+.bubble {
+  max-width: 78%;
+  padding: 0.55rem 0.8rem;
+  border-radius: 14px;
+  font-size: 0.92rem;
+  line-height: 1.4;
+  white-space: pre-wrap;
+}
+.bubble.assistant {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-bottom-left-radius: 4px;
+}
+.bubble.user {
+  background: #6366f1;
+  color: #fff;
+  border-bottom-right-radius: 4px;
+}
+.typing-indicator {
+  font-size: 0.8rem;
+  color: #6b7280;
+  padding-left: 0.3rem;
+}
+.error-banner {
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+  padding: 0.5rem 0.7rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+}
+
+.escalation-card {
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  border-radius: 10px;
+  padding: 0.5rem 0.7rem;
+  margin-top: 0.3rem;
+  font-size: 0.85rem;
+}
+.escalation-title {
+  font-weight: 600;
+  color: #065f46;
+}
+.escalation-meta {
+  color: #047857;
+  font-size: 0.78rem;
+  margin-top: 0.15rem;
+}
+
+.escalation-shortcuts {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-top: 1px solid #e5e7eb;
+}
+.escalation-shortcuts button {
+  flex: 1;
+  padding: 0.45rem 0.5rem;
+  border-radius: 8px;
+  border: 1px solid #d8dce3;
+  background: #fff;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+.escalation-shortcuts button:hover {
+  border-color: #6366f1;
+}
+
+.composer {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border-top: 1px solid #e5e7eb;
+}
+.composer input {
+  flex: 1;
+  padding: 0.55rem 0.7rem;
+  border-radius: 10px;
+  border: 1px solid #d8dce3;
+  font-size: 0.92rem;
+}
+.composer button {
+  padding: 0.55rem 1rem;
+  border-radius: 10px;
+  border: none;
+  background: #6366f1;
+  color: #fff;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+.composer button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}

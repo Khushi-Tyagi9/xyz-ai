@@ -39,6 +39,10 @@ def get_student(student_id: str) -> dict:
     raise NotFoundError(f"No student {student_id}")
 
 
+def list_students_in_class(class_id: str) -> list[dict]:
+    return [s for s in _db["students"] if s["class_id"] == class_id]
+
+
 def get_student_attendance(student_id: str) -> dict:
     student = get_student(student_id)
     records = [r for r in _db["attendance_log"] if r["student_id"] == student_id]

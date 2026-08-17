@@ -1,4 +1,4 @@
-import anthropic
+import openai
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
@@ -25,9 +25,9 @@ class ChatResponse(BaseModel):
 def chat(body: ChatRequest, session: Session = Depends(get_session)):
     try:
         result = orchestrator.handle_turn(session, body.session_id, body.message, body.language)
-    except anthropic.AuthenticationError:
-        raise HTTPException(status_code=502, detail="ANTHROPIC_API_KEY is missing or invalid - set a real key in backend/.env")
-    except anthropic.APIError as e:
+    except openai.AuthenticationError:
+        raise HTTPException(status_code=502, detail="GROQ_API_KEY is missing or invalid - set a real key in backend/.env")
+    except openai.APIError as e:
         raise HTTPException(status_code=502, detail=f"Upstream LLM error: {e}")
     except RuntimeError as e:
         raise HTTPException(status_code=500, detail=str(e))

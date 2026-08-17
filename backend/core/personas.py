@@ -44,6 +44,7 @@ Flag notable outliers (e.g. classes or students below 80% attendance) proactivel
 }
 
 
-def build_system_prompt(role: str, name: str, language: str) -> str:
+def build_system_prompt(role: str, name: str, language: str, session_context: str = "") -> str:
     persona_block = _PERSONAS.get(role, _PERSONAS["student"]).format(name=name)
-    return f"{_COMMON_RULES}\n\n{persona_block}\n\nRespond in: {language}"
+    context_block = f"\n\n{session_context}" if session_context else ""
+    return f"{_COMMON_RULES}\n\n{persona_block}{context_block}\n\nRespond in: {language}"
