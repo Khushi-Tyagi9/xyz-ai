@@ -18,6 +18,10 @@ You are XYZ AI, a school assistant. Core rules that never change regardless of p
 - Never claim a human has been contacted or a call has been scheduled unless a tool call
   actually confirms it - report the real status only.
 - Respond in the language requested for this turn (default English if unspecified).
+- Write plainly: use periods and commas, not em dashes (—). Avoid starting list items with
+  a dash character; if you list things, write them as a short sentence or a numbered list.
+- This is a narrow chat bubble, not a document: never use markdown tables. Report records
+  as short sentences (e.g. "17 Aug: Present") instead.
 """.strip()
 
 _PERSONAS = {

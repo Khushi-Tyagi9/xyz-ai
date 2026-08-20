@@ -1,7 +1,8 @@
 import type { ReactNode } from "react";
 
-// Minimal markdown renderer: **bold**, *italic*, and "- " bullet lists.
-// No dependency - sufficient for the lightly-formatted style the assistant uses.
+// Minimal markdown renderer: **bold**, *italic*, "- " bullet lists, and a defensive
+// fallback that flattens markdown tables (the model is instructed to avoid them, but
+// this keeps a stray one from rendering as broken pipe/dash text). No dependency.
 function renderInline(text: string): ReactNode[] {
   const parts = text.split(/(\*\*[^*]+\*\*|\*[^*]+\*)/g).filter(Boolean);
   return parts.map((part, i) => {
@@ -33,16 +34,28 @@ export function renderMarkdown(text: string): ReactNode[] {
   }
 
   lines.forEach((line, i) => {
-    const bulletMatch = line.match(/^\s*[-*]\s+(.*)/);
+    // Defensive fallback: the model is instructed not to use markdown tables in a chat
+    // bubble, but if one slips through, drop the "|---|---|" separator row entirely
+    // (it renders as a meaningless row of dashes) and flatten data rows to plain text.
+    if (/^\s*\|?[\s:|-]+\|?\s*$/.test(line) && line.includes("-")) {
+      return;
+    }
+    const tableRowMatch = line.match(/^\s*\|(.+)\|\s*$/);
+    const effectiveLine = tableRowMatch
+      ? tableRowMatch[1].split("|").map((cell) => cell.trim()).filter(Boolean).join(" · ")
+      : line;
+
+    const bulletMatch = effectiveLine.match(/^\s*[-*]\s+(.*)/);
     if (bulletMatch) {
       listItems.push(bulletMatch[1]);
       return;
     }
     flushList(`list-${i}`);
-    if (line.trim() === "") {
-      blocks.push(<br key={i} />);
+    if (effectiveLine.trim() === "") {
+      blocks.push(<br key={`br-${i}`} />);
     } else {
-      blocks.push(<span key={i}>{renderInline(line)}\n</span>);
+      blocks.push(<span key={`line-${i}`}>{renderInline(effectiveLine)}</span>);
+      if (i < lines.length - 1) blocks.push(<br key={`nl-${i}`} />);
     }
   });
   flushList("list-end");

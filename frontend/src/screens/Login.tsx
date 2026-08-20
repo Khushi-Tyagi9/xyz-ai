@@ -72,7 +72,7 @@ export default function Login({ onLogin, onBack, theme, onToggleTheme }: LoginPr
         </button>
         <div className="login-mark">XYZ</div>
         <h1>XYZ AI</h1>
-        <p className="login-subtitle">Your human-like school assistant — chat, voice, and avatar, in one place.</p>
+        <p className="login-subtitle">Your human-like school assistant for chat, voice, and avatar, all in one place.</p>
         <div className="capability-strip">
           {CAPABILITIES.map((c) => (
             <span key={c.label}>

@@ -19,7 +19,7 @@ const STEPS: { icon: IconName; grad: string; title: string; body: string }[] = [
     icon: "users",
     grad: "var(--grad-student)",
     title: "Sign in with your role",
-    body: "Student, Parent, Teacher, or Principal — XYZ AI resolves your role server-side, so it's never guessed from what you type.",
+    body: "Student, Parent, Teacher, or Principal. XYZ AI resolves your role server-side, so it's never guessed from what you type.",
   },
   {
     icon: "messageCircle",
@@ -31,7 +31,7 @@ const STEPS: { icon: IconName; grad: string; title: string; body: string }[] = [
     icon: "alertTriangle",
     grad: "var(--grad-teacher)",
     title: "Escalate when it matters",
-    body: "XYZ AI can loop in a real teacher or school management — but only ever after you explicitly confirm.",
+    body: "XYZ AI can loop in a real teacher or school management, but only ever after you explicitly confirm.",
   },
 ];
 
@@ -43,7 +43,7 @@ const PERSONAS: { icon: IconName; grad: string; title: string; body: string }[] 
 ];
 
 const SECURITY_POINTS = [
-  "Role comes only from a server-issued session — never from what's typed in chat.",
+  "Role comes only from a server-issued session, never from what's typed in chat.",
   "Every tool call is re-checked against a permission table, independent of what the model decides.",
   "Prompt-injection and jailbreak attempts are detected and treated strictly as data, not instructions.",
   "XYZ AI never claims a human was contacted unless a real, confirmed request was submitted.",
@@ -82,8 +82,8 @@ export default function Landing({ onGetStarted, theme, onToggleTheme }: LandingP
               One assistant, every voice in your school.
             </h1>
             <p className="landing-hero-sub">
-              XYZ AI talks naturally with students, parents, teachers, and principals —
-              by chat or voice, in 11 languages — and knows exactly what each of them
+              XYZ AI talks naturally with students, parents, teachers, and principals
+              by chat or voice, in 11 languages, and knows exactly what each of them
               is allowed to see and do.
             </p>
             <div className="landing-hero-actions">
@@ -112,7 +112,7 @@ export default function Landing({ onGetStarted, theme, onToggleTheme }: LandingP
               </div>
               <div className="mock-bubble assistant">Rahul's current attendance is <strong>91.2%</strong>. Want to see his recent daily records?</div>
               <div className="mock-bubble user" style={{ background: "var(--grad-parent)" }}>Yes, and can I talk to his teacher?</div>
-              <div className="mock-bubble assistant">Of course — I'll connect you. Shall I submit the request now?</div>
+              <div className="mock-bubble assistant">Of course, I'll connect you. Shall I submit the request now?</div>
               <div className="mock-escalation">
                 <Icon name="checkCircle" size={14} /> Request submitted to Teacher
               </div>
@@ -154,7 +154,7 @@ export default function Landing({ onGetStarted, theme, onToggleTheme }: LandingP
       <section className="landing-section landing-section-alt" id="personas">
         <div className="landing-container">
           <h2 className="landing-section-title">Built for every role</h2>
-          <p className="landing-section-sub">One assistant, four distinct personas — same security rules underneath.</p>
+          <p className="landing-section-sub">One assistant, four distinct personas, all under the same security rules.</p>
           <div className="landing-personas">
             {PERSONAS.map((p) => (
               <div key={p.title} className="landing-persona-card">
@@ -206,7 +206,7 @@ export default function Landing({ onGetStarted, theme, onToggleTheme }: LandingP
       <section className="landing-cta">
         <div className="landing-container landing-cta-inner">
           <h2>Ready to try it yourself?</h2>
-          <p>Sign in as any of the six demo identities — no password required.</p>
+          <p>Sign in as any of the six demo identities. No password required.</p>
           <button className="landing-btn-primary landing-btn-lg" onClick={onGetStarted}>
             Try XYZ AI <Icon name="arrowRight" size={16} />
           </button>
@@ -219,7 +219,7 @@ export default function Landing({ onGetStarted, theme, onToggleTheme }: LandingP
             <span className="login-mark landing-mark">XYZ</span>
             <span className="landing-wordmark">XYZ AI</span>
           </div>
-          <div className="landing-footer-note">Demo build — all data is mocked. Built for a hackathon submission.</div>
+          <div className="landing-footer-note">Demo build, all data is mocked. Built for a hackathon submission.</div>
         </div>
       </footer>
     </div>
