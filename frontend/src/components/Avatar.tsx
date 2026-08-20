@@ -1,10 +1,12 @@
+import Icon, { type IconName } from "./Icon";
+
 export type AvatarState = "idle" | "listening" | "speaking";
 
-const PERSONA_META: Record<string, { emoji: string; gradient: string }> = {
-  student: { emoji: "🎓", gradient: "var(--grad-student)" },
-  parent: { emoji: "💛", gradient: "var(--grad-parent)" },
-  teacher: { emoji: "🧑‍🏫", gradient: "var(--grad-teacher)" },
-  principal: { emoji: "🏫", gradient: "var(--grad-principal)" },
+const PERSONA_META: Record<string, { icon: IconName; gradient: string }> = {
+  student: { icon: "graduationCap", gradient: "var(--grad-student)" },
+  parent: { icon: "users", gradient: "var(--grad-parent)" },
+  teacher: { icon: "pencil", gradient: "var(--grad-teacher)" },
+  principal: { icon: "building", gradient: "var(--grad-principal)" },
 };
 
 export default function Avatar({
@@ -16,14 +18,14 @@ export default function Avatar({
   state?: AvatarState;
   size?: number;
 }) {
-  const meta = PERSONA_META[role] ?? { emoji: "🤖", gradient: "var(--grad-student)" };
+  const meta = PERSONA_META[role] ?? { icon: "messageCircle" as IconName, gradient: "var(--grad-student)" };
 
   return (
     <div
       className={`avatar avatar-${state}`}
-      style={{ width: size, height: size, background: meta.gradient, fontSize: size * 0.5 }}
+      style={{ width: size, height: size, background: meta.gradient }}
     >
-      <span className="avatar-emoji">{meta.emoji}</span>
+      <Icon name={meta.icon} size={size * 0.46} strokeWidth={1.6} className="avatar-icon" />
       {state === "listening" && (
         <span className="avatar-ring avatar-ring-listening" aria-hidden />
       )}

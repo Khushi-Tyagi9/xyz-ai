@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { listDemoUsers, login, type DemoUser, type LoginResponse } from "../api/client";
 import Avatar from "../components/Avatar";
+import Icon, { type IconName } from "../components/Icon";
 
 const ROLE_META: Record<string, { label: string; blurb: string }> = {
   student: { label: "Student", blurb: "Check your own attendance & more" },
@@ -9,13 +10,23 @@ const ROLE_META: Record<string, { label: string; blurb: string }> = {
   principal: { label: "Principal", blurb: "School-wide analytics at a glance" },
 };
 
+const CAPABILITIES: { icon: IconName; label: string }[] = [
+  { icon: "messageCircle", label: "Natural chat" },
+  { icon: "mic", label: "Voice in / out" },
+  { icon: "graduationCap", label: "AI avatar" },
+  { icon: "globe", label: "11 languages" },
+  { icon: "shield", label: "Role-secured" },
+  { icon: "alertTriangle", label: "Human escalation" },
+];
+
 interface LoginProps {
   onLogin: (session: LoginResponse) => void;
+  onBack: () => void;
   theme: "light" | "dark";
   onToggleTheme: () => void;
 }
 
-export default function Login({ onLogin, theme, onToggleTheme }: LoginProps) {
+export default function Login({ onLogin, onBack, theme, onToggleTheme }: LoginProps) {
   const [users, setUsers] = useState<DemoUser[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loadingId, setLoadingId] = useState<string | null>(null);
@@ -46,6 +57,9 @@ export default function Login({ onLogin, theme, onToggleTheme }: LoginProps) {
 
   return (
     <div className="login-screen">
+      <button className="login-back" onClick={onBack}>
+        <Icon name="arrowRight" size={13} className="login-back-icon" /> Back to home
+      </button>
       <div className="login-hero">
         <div className="login-mesh" aria-hidden />
         <button
@@ -54,18 +68,18 @@ export default function Login({ onLogin, theme, onToggleTheme }: LoginProps) {
           title={theme === "light" ? "Switch to dark mode" : "Switch to light mode"}
           aria-label="Toggle theme"
         >
-          {theme === "light" ? "🌙" : "☀️"}
+          <Icon name={theme === "light" ? "moon" : "sun"} size={16} />
         </button>
         <div className="login-mark">XYZ</div>
         <h1>XYZ AI</h1>
         <p className="login-subtitle">Your human-like school assistant — chat, voice, and avatar, in one place.</p>
         <div className="capability-strip">
-          <span>💬 Natural chat</span>
-          <span>🎤 Voice in/out</span>
-          <span>🧑‍🎤 AI avatar</span>
-          <span>🌐 11 languages</span>
-          <span>🔒 Role-secured</span>
-          <span>🚨 Human escalation</span>
+          {CAPABILITIES.map((c) => (
+            <span key={c.label}>
+              <Icon name={c.icon} size={14} strokeWidth={1.8} />
+              {c.label}
+            </span>
+          ))}
         </div>
       </div>
 

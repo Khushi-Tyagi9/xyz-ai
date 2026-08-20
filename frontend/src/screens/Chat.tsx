@@ -4,6 +4,7 @@ import PersonaHeader from "../components/PersonaHeader";
 import AvatarStage from "../components/AvatarStage";
 import MessageBubble, { type ChatMessage } from "../components/MessageBubble";
 import EscalationCard from "../components/EscalationCard";
+import Icon from "../components/Icon";
 import { useSpeechRecognition } from "../hooks/useSpeechRecognition";
 import { useSpeechSynthesis } from "../hooks/useSpeechSynthesis";
 import { LANGUAGES, bcp47For } from "../utils/languages";
@@ -99,7 +100,7 @@ export default function Chat({ session, onLogout, theme, onToggleTheme }: ChatPr
               onClick={() => setVoiceReplies((v) => !v)}
               title={voiceReplies ? "Voice replies on" : "Voice replies off"}
             >
-              {voiceReplies ? "🔊" : "🔈"}
+              <Icon name={voiceReplies ? "volume" : "volumeOff"} size={16} />
             </button>
           )}
           <button className="logout-btn" onClick={onLogout}>
@@ -111,7 +112,7 @@ export default function Chat({ session, onLogout, theme, onToggleTheme }: ChatPr
             title={theme === "light" ? "Switch to dark mode" : "Switch to light mode"}
             aria-label="Toggle theme"
           >
-            {theme === "light" ? "🌙" : "☀️"}
+            <Icon name={theme === "light" ? "moon" : "sun"} size={16} />
           </button>
         </div>
       </div>
@@ -137,10 +138,10 @@ export default function Chat({ session, onLogout, theme, onToggleTheme }: ChatPr
       {showEscalationShortcuts && (
         <div className="escalation-shortcuts">
           <button onClick={() => send("I'd like to talk to my teacher about something.")}>
-            👩‍🏫 Talk to Teacher
+            <Icon name="pencil" size={14} /> Talk to Teacher
           </button>
           <button onClick={() => send("I'd like to contact school management.")}>
-            🏫 Contact School Management
+            <Icon name="building" size={14} /> Contact School Management
           </button>
         </div>
       )}
@@ -159,7 +160,7 @@ export default function Chat({ session, onLogout, theme, onToggleTheme }: ChatPr
             onClick={() => (listening ? stopListening() : startListening())}
             title={listening ? "Stop listening" : "Speak your message"}
           >
-            {listening ? "⏹" : "🎤"}
+            <Icon name={listening ? "stop" : "mic"} size={17} />
           </button>
         )}
         <input
@@ -169,7 +170,7 @@ export default function Chat({ session, onLogout, theme, onToggleTheme }: ChatPr
           disabled={sending || listening}
         />
         <button type="submit" disabled={sending || listening || !input.trim()}>
-          Send
+          Send <Icon name="arrowRight" size={15} />
         </button>
       </form>
     </div>
