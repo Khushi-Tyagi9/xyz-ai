@@ -135,3 +135,34 @@ def get_escalation_request(request_id: str) -> dict:
         if r["request_id"] == request_id:
             return r
     raise NotFoundError(f"No escalation request {request_id}")
+
+
+def _enrich_escalation_request(record: dict) -> dict:
+    """Adds human-readable names so the recipient doesn't just see raw ids."""
+    enriched = dict(record)
+    if record.get("student_id"):
+        try:
+            enriched["student_name"] = get_student(record["student_id"])["name"]
+        except NotFoundError:
+            enriched["student_name"] = None
+    try:
+        enriched["requested_by_name"] = get_user(record["requested_by_user_id"])["name"]
+    except NotFoundError:
+        enriched["requested_by_name"] = None
+    return enriched
+
+
+def list_escalation_requests_for_teacher(teacher_id: str) -> list[dict]:
+    """teacher_call requests for students in this teacher's own class(es)."""
+    class_ids = {c["class_id"] for c in _db["classes"] if c["teacher_id"] == teacher_id}
+    student_ids = {s["student_id"] for s in _db["students"] if s["class_id"] in class_ids}
+    matches = [
+        r for r in _db["escalation_requests"]
+        if r["kind"] == "teacher_call" and r.get("student_id") in student_ids
+    ]
+    return [_enrich_escalation_request(r) for r in matches]
+
+
+def list_escalation_requests_for_management() -> list[dict]:
+    """Every escalation request school-wide - management sees both call types."""
+    return [_enrich_escalation_request(r) for r in _db["escalation_requests"]]

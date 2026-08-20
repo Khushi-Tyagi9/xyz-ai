@@ -43,6 +43,15 @@ TOOL_SPECS = [
             "required": ["note", "confirm"],
         },
     },
+    {
+        "name": "list_pending_requests",
+        "description": (
+            "List escalation requests (talk-to-teacher / contact-management) waiting for this user "
+            "to act on. For a teacher, this is requests about students in their own class. For "
+            "principal/management, this is every request school-wide."
+        ),
+        "input_schema": {"type": "object", "properties": {}, "required": []},
+    },
 ]
 
 
@@ -68,7 +77,18 @@ def request_management_call(session, args: dict) -> dict:
     return _submit("management_call", session, args)
 
 
+def list_pending_requests(session, args: dict) -> dict:
+    if session.role == "teacher":
+        items = school_api.list_escalation_requests_for_teacher(session.teacher_id)
+    elif session.role == "principal":
+        items = school_api.list_escalation_requests_for_management()
+    else:
+        items = []
+    return {"count": len(items), "requests": items}
+
+
 IMPLS = {
     "request_teacher_call": request_teacher_call,
     "request_management_call": request_management_call,
+    "list_pending_requests": list_pending_requests,
 }

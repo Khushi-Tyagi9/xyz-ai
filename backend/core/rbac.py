@@ -18,8 +18,8 @@ class PermissionDeniedError(Exception):
 ROLE_TOOLS: dict[str, set[str]] = {
     "student": {"get_own_attendance", "request_teacher_call", "request_management_call"},
     "parent": {"get_child_attendance", "request_teacher_call", "request_management_call"},
-    "teacher": {"mark_attendance"},
-    "principal": {"get_school_attendance_summary"},
+    "teacher": {"mark_attendance", "list_pending_requests"},
+    "principal": {"get_school_attendance_summary", "list_pending_requests"},
 }
 
 
@@ -53,8 +53,9 @@ def check_permission(session: Session, tool_name: str, tool_args: dict) -> None:
         if student["class_id"] not in (session.class_ids or []):
             raise PermissionDeniedError("Teachers may only mark attendance for their own class")
 
-    elif tool_name == "get_school_attendance_summary":
-        pass  # role check above is sufficient; no per-record ownership to verify
+    elif tool_name in ("get_school_attendance_summary", "list_pending_requests"):
+        pass  # role check above is sufficient; the tool itself scopes results to
+        # this session's own teacher_id/role, there's no caller-supplied id to check
 
     elif tool_name in ("request_teacher_call", "request_management_call"):
         requested_student = tool_args.get("student_id")
