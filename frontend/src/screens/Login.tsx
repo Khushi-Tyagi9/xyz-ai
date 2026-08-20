@@ -9,7 +9,13 @@ const ROLE_META: Record<string, { label: string; blurb: string }> = {
   principal: { label: "Principal", blurb: "School-wide analytics at a glance" },
 };
 
-export default function Login({ onLogin }: { onLogin: (session: LoginResponse) => void }) {
+interface LoginProps {
+  onLogin: (session: LoginResponse) => void;
+  theme: "light" | "dark";
+  onToggleTheme: () => void;
+}
+
+export default function Login({ onLogin, theme, onToggleTheme }: LoginProps) {
   const [users, setUsers] = useState<DemoUser[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loadingId, setLoadingId] = useState<string | null>(null);
@@ -41,9 +47,26 @@ export default function Login({ onLogin }: { onLogin: (session: LoginResponse) =
   return (
     <div className="login-screen">
       <div className="login-hero">
+        <div className="login-mesh" aria-hidden />
+        <button
+          className="theme-toggle"
+          onClick={onToggleTheme}
+          title={theme === "light" ? "Switch to dark mode" : "Switch to light mode"}
+          aria-label="Toggle theme"
+        >
+          {theme === "light" ? "🌙" : "☀️"}
+        </button>
         <div className="login-mark">XYZ</div>
         <h1>XYZ AI</h1>
         <p className="login-subtitle">Your human-like school assistant — chat, voice, and avatar, in one place.</p>
+        <div className="capability-strip">
+          <span>💬 Natural chat</span>
+          <span>🎤 Voice in/out</span>
+          <span>🧑‍🎤 AI avatar</span>
+          <span>🌐 11 languages</span>
+          <span>🔒 Role-secured</span>
+          <span>🚨 Human escalation</span>
+        </div>
       </div>
 
       {error && <div className="error-banner">{error}</div>}

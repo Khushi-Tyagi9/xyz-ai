@@ -13,7 +13,14 @@ interface Turn {
   escalation?: Record<string, unknown> | null;
 }
 
-export default function Chat({ session, onLogout }: { session: LoginResponse; onLogout: () => void }) {
+interface ChatProps {
+  session: LoginResponse;
+  onLogout: () => void;
+  theme: "light" | "dark";
+  onToggleTheme: () => void;
+}
+
+export default function Chat({ session, onLogout, theme, onToggleTheme }: ChatProps) {
   const sessionId = useRef(crypto.randomUUID());
   const [language, setLanguage] = useState("English");
   const [input, setInput] = useState("");
@@ -97,6 +104,14 @@ export default function Chat({ session, onLogout }: { session: LoginResponse; on
           <button className="logout-btn" onClick={onLogout}>
             Switch user
           </button>
+          <button
+            className="theme-toggle"
+            onClick={onToggleTheme}
+            title={theme === "light" ? "Switch to dark mode" : "Switch to light mode"}
+            aria-label="Toggle theme"
+          >
+            {theme === "light" ? "🌙" : "☀️"}
+          </button>
         </div>
       </div>
 
@@ -109,7 +124,11 @@ export default function Chat({ session, onLogout }: { session: LoginResponse; on
             {t.escalation && <EscalationCard escalation={t.escalation} />}
           </div>
         ))}
-        {sending && <div className="typing-indicator">XYZ AI is typing…</div>}
+        {sending && (
+          <div className="typing-indicator">
+            <span className="typing-dots"><i /><i /><i /></span> XYZ AI is typing
+          </div>
+        )}
         {error && <div className="error-banner">{error}</div>}
         <div ref={messagesEndRef} />
       </div>
