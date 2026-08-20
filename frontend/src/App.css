@@ -442,9 +442,12 @@ body {
   box-shadow: var(--shadow-sm);
 }
 .bubble.user {
-  background: var(--grad-student);
+  background: var(--role-grad, var(--grad-student));
   color: #fff;
   border-bottom-right-radius: 4px;
+}
+.bubble.user strong, .bubble.user em {
+  color: #fff;
 }
 .typing-indicator {
   display: flex;

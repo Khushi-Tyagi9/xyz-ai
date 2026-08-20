@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { sendChat, type LoginResponse } from "../api/client";
 import PersonaHeader from "../components/PersonaHeader";
 import AvatarStage from "../components/AvatarStage";
@@ -79,9 +79,10 @@ export default function Chat({ session, onLogout, theme, onToggleTheme }: ChatPr
 
   const avatarState = listening ? "listening" : speaking ? "speaking" : "idle";
   const showEscalationShortcuts = session.role === "student" || session.role === "parent";
+  const roleGradVar = `var(--grad-${["student", "parent", "teacher", "principal"].includes(session.role) ? session.role : "student"})`;
 
   return (
-    <div className="chat-screen">
+    <div className="chat-screen" style={{ "--role-grad": roleGradVar } as CSSProperties}>
       <div className="chat-topbar">
         <PersonaHeader role={session.role} name={session.name} avatarState={avatarState} />
         <div className="topbar-actions">
