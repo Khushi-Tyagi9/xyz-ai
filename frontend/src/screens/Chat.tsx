@@ -36,7 +36,7 @@ export default function Chat({ session, onLogout, theme, onToggleTheme }: ChatPr
       id: newId(),
       message: {
         role: "assistant",
-        text: `Hi ${session.name.split(" ")[0]}, I'm XYZ AI. How can I help you today?`,
+        text: `Hi ${session.name}, I'm XYZ AI. How can I help you today?`,
       },
     },
   ]);
