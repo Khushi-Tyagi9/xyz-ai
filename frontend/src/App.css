@@ -449,6 +449,13 @@ body {
 .bubble.user strong, .bubble.user em {
   color: #fff;
 }
+.bubble-list {
+  margin: 0.2rem 0;
+  padding-left: 1.1rem;
+}
+.bubble-list li {
+  margin-bottom: 0.15rem;
+}
 .typing-indicator {
   display: flex;
   align-items: center;
