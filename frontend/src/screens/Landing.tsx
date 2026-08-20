@@ -1,3 +1,4 @@
+import Avatar from "../components/Avatar";
 import Icon, { type IconName } from "../components/Icon";
 import { LANGUAGES } from "../utils/languages";
 
@@ -102,9 +103,7 @@ export default function Landing({ onGetStarted, theme, onToggleTheme }: LandingP
                 <span /><span /><span />
               </div>
               <div className="mock-avatar-row">
-                <div className="avatar avatar-idle mock-avatar" style={{ width: 40, height: 40, background: "var(--grad-parent)" }}>
-                  <Icon name="users" size={19} className="avatar-icon" />
-                </div>
+                <Avatar role="parent" size={40} />
                 <div>
                   <div className="mock-avatar-title">Parent Support Assistant</div>
                   <div className="mock-avatar-sub">for Sunita Sharma</div>

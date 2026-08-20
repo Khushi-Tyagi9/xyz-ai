@@ -123,6 +123,7 @@ body {
   flex-shrink: 0;
   box-shadow: var(--shadow-sm);
   animation: avatar-breathe 5s ease-in-out infinite;
+  overflow: visible;
 }
 .avatar-icon {
   color: #fff;
@@ -156,28 +157,66 @@ body {
   0%, 100% { filter: brightness(1); }
   50% { filter: brightness(1.12); }
 }
-.avatar-bars {
+
+/* Face: eyes + mouth, positioned by percentage so one set of rules scales from the
+   18px badge on the login screen up to the 84px hero avatar without any JS math. */
+.avatar-face {
   position: absolute;
-  bottom: -8px;
-  left: 50%;
-  transform: translateX(-50%);
+  inset: 0;
+}
+.avatar-eye {
+  position: absolute;
+  top: 33%;
+  width: 13%;
+  height: 13%;
+  border-radius: 50%;
+  background: #fff;
+  opacity: 0.95;
+  animation: avatar-blink 5.5s ease-in-out infinite;
+}
+.avatar-eye-l {
+  left: 27%;
+}
+.avatar-eye-r {
+  left: 60%;
+  animation-delay: 0.03s;
+}
+@keyframes avatar-blink {
+  0%, 92%, 100% { transform: scaleY(1); }
+  95% { transform: scaleY(0.12); }
+}
+.avatar-mouth {
+  position: absolute;
+  left: 30%;
+  top: 54%;
+  width: 40%;
+  height: 24%;
+  overflow: visible;
+}
+.avatar-mouth-o {
+  opacity: 0.95;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.avatar-speaking .avatar-mouth-o {
+  animation: avatar-talk 0.28s ease-in-out infinite;
+}
+@keyframes avatar-talk {
+  0%, 100% { transform: scaleY(0.55); }
+  50% { transform: scaleY(1.15); }
+}
+
+.avatar-role-badge {
+  position: absolute;
+  right: -3%;
+  bottom: -3%;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 1.5px solid var(--surface);
+  box-shadow: var(--shadow-sm);
   display: flex;
-  gap: 3px;
-  align-items: flex-end;
-  height: 12px;
-}
-.avatar-bars i {
-  width: 3px;
-  border-radius: 2px;
-  background: var(--accent);
-  animation: avatar-bar-bounce 0.8s ease-in-out infinite;
-}
-.avatar-bars i:nth-child(1) { animation-delay: 0s; }
-.avatar-bars i:nth-child(2) { animation-delay: 0.15s; }
-.avatar-bars i:nth-child(3) { animation-delay: 0.3s; }
-@keyframes avatar-bar-bounce {
-  0%, 100% { height: 4px; }
-  50% { height: 12px; }
+  align-items: center;
+  justify-content: center;
 }
 
 /* ---- Avatar stage ---- */

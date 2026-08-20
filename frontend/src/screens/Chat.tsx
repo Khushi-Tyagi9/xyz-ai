@@ -10,6 +10,7 @@ import { useSpeechSynthesis } from "../hooks/useSpeechSynthesis";
 import { LANGUAGES, bcp47For } from "../utils/languages";
 
 interface Turn {
+  id: string;
   message: ChatMessage;
   escalation?: Record<string, unknown> | null;
 }
@@ -21,6 +22,10 @@ interface ChatProps {
   onToggleTheme: () => void;
 }
 
+function newId() {
+  return crypto.randomUUID();
+}
+
 export default function Chat({ session, onLogout, theme, onToggleTheme }: ChatProps) {
   const sessionId = useRef(crypto.randomUUID());
   const [language, setLanguage] = useState("English");
@@ -28,6 +33,7 @@ export default function Chat({ session, onLogout, theme, onToggleTheme }: ChatPr
   const [voiceReplies, setVoiceReplies] = useState(false);
   const [turns, setTurns] = useState<Turn[]>([
     {
+      id: newId(),
       message: {
         role: "assistant",
         text: `Hi ${session.name.split(" ")[0]}, I'm XYZ AI. How can I help you today?`,
@@ -45,48 +51,56 @@ export default function Chat({ session, onLogout, theme, onToggleTheme }: ChatPr
     const trimmed = text.trim();
     if (!trimmed || sending) return;
 
-    setTurns((t) => [...t, { message: { role: "user", text: trimmed } }]);
+    const userTurnId = newId();
+    const assistantTurnId = newId();
+
+    // Both turns are added in a single update so the user's own message can never be
+    // lost or overwritten by a later delta update racing against a separate "add user
+    // turn" update - every subsequent change targets the assistant turn by its own id.
+    setTurns((t) => [
+      ...t,
+      { id: userTurnId, message: { role: "user", text: trimmed } },
+      { id: assistantTurnId, message: { role: "assistant", text: "" } },
+    ]);
     setInput("");
     setSending(true);
     setError(null);
     setLastFailedMessage(null);
 
     let streamedText = "";
-    let assistantTurnStarted = false;
+    let gotFirstDelta = false;
 
     try {
       const res = await streamChat(session.token, sessionId.current, trimmed, language, (chunk) => {
         streamedText += chunk;
+        gotFirstDelta = true;
         setSending(false);
-        setTurns((t) => {
-          if (!assistantTurnStarted) {
-            assistantTurnStarted = true;
-            return [...t, { message: { role: "assistant", text: streamedText } }];
-          }
-          const next = [...t];
-          next[next.length - 1] = { message: { role: "assistant", text: streamedText } };
-          return next;
-        });
+        setTurns((t) =>
+          t.map((turn) =>
+            turn.id === assistantTurnId ? { ...turn, message: { role: "assistant", text: streamedText } } : turn
+          )
+        );
       });
 
-      setTurns((t) => {
-        const next = [...t];
-        const finalTurn = { message: { role: "assistant" as const, text: res.reply }, escalation: res.escalation };
-        if (assistantTurnStarted) {
-          next[next.length - 1] = finalTurn;
-        } else {
-          next.push(finalTurn);
-        }
-        return next;
-      });
+      setTurns((t) =>
+        t.map((turn) =>
+          turn.id === assistantTurnId
+            ? { id: assistantTurnId, message: { role: "assistant", text: res.reply }, escalation: res.escalation }
+            : turn
+        )
+      );
       if (voiceReplies) speak(res.reply, bcp47For(language));
     } catch (e) {
       const apiError = e instanceof ApiError ? e : null;
+      // Drop the empty placeholder bubble if nothing ever streamed into it.
+      if (!gotFirstDelta) {
+        setTurns((t) => t.filter((turn) => turn.id !== assistantTurnId));
+      }
       setError({
         message: apiError?.message ?? (e instanceof Error ? e.message : String(e)),
-        retryable: !assistantTurnStarted,
+        retryable: !gotFirstDelta,
       });
-      if (!assistantTurnStarted) setLastFailedMessage(trimmed);
+      if (!gotFirstDelta) setLastFailedMessage(trimmed);
     } finally {
       setSending(false);
     }
@@ -149,9 +163,9 @@ export default function Chat({ session, onLogout, theme, onToggleTheme }: ChatPr
       <AvatarStage role={session.role} name={session.name} state={avatarState} />
 
       <div className="chat-messages">
-        {turns.map((t, i) => (
-          <div key={i}>
-            <MessageBubble message={t.message} />
+        {turns.map((t) => (
+          <div key={t.id}>
+            {t.message.text && <MessageBubble message={t.message} />}
             {t.escalation && <EscalationCard escalation={t.escalation} />}
           </div>
         ))}
