@@ -575,8 +575,12 @@ body {
   font-weight: 600;
   cursor: pointer;
 }
-.error-retry-btn:hover {
+.error-retry-btn:hover:not(:disabled) {
   background: var(--error-bg);
+}
+.error-retry-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
 }
 
 .escalation-card {
@@ -614,8 +618,12 @@ body {
   font-size: 0.8rem;
   transition: border-color 0.15s;
 }
-.escalation-shortcuts button:hover {
+.escalation-shortcuts button:hover:not(:disabled) {
   border-color: var(--accent);
+}
+.escalation-shortcuts button:disabled {
+  opacity: 0.5;
+  cursor: default;
 }
 
 .composer {
@@ -666,8 +674,12 @@ body {
   font-size: 1.05rem;
   transition: border-color 0.15s, background 0.15s;
 }
-.mic-btn:hover {
+.mic-btn:hover:not(:disabled) {
   border-color: var(--accent);
+}
+.mic-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
 }
 .mic-btn.listening {
   background: #fee2e2;

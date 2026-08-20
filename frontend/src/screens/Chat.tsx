@@ -40,16 +40,38 @@ export default function Chat({ session, onLogout, theme, onToggleTheme }: ChatPr
       },
     },
   ]);
+  // `busy` spans the whole request (guards double-send, disables inputs); `sending`
+  // is just "no text has arrived yet" for the typing-dots indicator. These used to be
+  // the same flag, which meant the moment the first token streamed in, `sending` flipped
+  // to false and silently re-enabled the input/mic/send button mid-reply - letting a
+  // second message fire while the first was still streaming. Keep them separate.
+  const [busy, setBusy] = useState(false);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<{ message: string; retryable: boolean } | null>(null);
   const [lastFailedMessage, setLastFailedMessage] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  // Setting the flag on mount (not just declaring it via useRef) matters: React 18
+  // StrictMode double-invokes effects in dev (mount -> cleanup -> mount again), so a
+  // cleanup-only effect here would flip this to false on the very first render and
+  // never re-arm it, silently killing every future isCurrent() check.
+  const isMountedRef = useRef(true);
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => { isMountedRef.current = false; };
+  }, []);
+  // Tags each send() call with a generation number so a stale call (e.g. a request that
+  // hangs or resolves unusually late) can never touch state on behalf of a newer one -
+  // every state update below checks it's still the active generation before applying.
+  const requestGenRef = useRef(0);
 
   const { speak, speaking, supported: ttsSupported } = useSpeechSynthesis();
 
   async function send(text: string) {
     const trimmed = text.trim();
-    if (!trimmed || sending) return;
+    if (!trimmed || busy) return;
+
+    const myGeneration = ++requestGenRef.current;
+    const isCurrent = () => isMountedRef.current && requestGenRef.current === myGeneration;
 
     const userTurnId = newId();
     const assistantTurnId = newId();
@@ -63,6 +85,7 @@ export default function Chat({ session, onLogout, theme, onToggleTheme }: ChatPr
       { id: assistantTurnId, message: { role: "assistant", text: "" } },
     ]);
     setInput("");
+    setBusy(true);
     setSending(true);
     setError(null);
     setLastFailedMessage(null);
@@ -72,6 +95,7 @@ export default function Chat({ session, onLogout, theme, onToggleTheme }: ChatPr
 
     try {
       const res = await streamChat(session.token, sessionId.current, trimmed, language, (chunk) => {
+        if (!isCurrent()) return;
         streamedText += chunk;
         gotFirstDelta = true;
         setSending(false);
@@ -82,6 +106,7 @@ export default function Chat({ session, onLogout, theme, onToggleTheme }: ChatPr
         );
       });
 
+      if (!isCurrent()) return;
       setTurns((t) =>
         t.map((turn) =>
           turn.id === assistantTurnId
@@ -91,6 +116,7 @@ export default function Chat({ session, onLogout, theme, onToggleTheme }: ChatPr
       );
       if (voiceReplies) speak(res.reply, bcp47For(language));
     } catch (e) {
+      if (!isCurrent()) return;
       const apiError = e instanceof ApiError ? e : null;
       // Drop the empty placeholder bubble if nothing ever streamed into it.
       if (!gotFirstDelta) {
@@ -102,7 +128,10 @@ export default function Chat({ session, onLogout, theme, onToggleTheme }: ChatPr
       });
       if (!gotFirstDelta) setLastFailedMessage(trimmed);
     } finally {
-      setSending(false);
+      if (isCurrent()) {
+        setBusy(false);
+        setSending(false);
+      }
     }
   }
 
@@ -178,7 +207,7 @@ export default function Chat({ session, onLogout, theme, onToggleTheme }: ChatPr
           <div className="error-banner error-banner-actions">
             <span>{error.message}</span>
             {error.retryable && lastFailedMessage && (
-              <button type="button" className="error-retry-btn" onClick={() => send(lastFailedMessage)}>
+              <button type="button" className="error-retry-btn" disabled={busy} onClick={() => send(lastFailedMessage)}>
                 Retry
               </button>
             )}
@@ -189,10 +218,10 @@ export default function Chat({ session, onLogout, theme, onToggleTheme }: ChatPr
 
       {showEscalationShortcuts && (
         <div className="escalation-shortcuts">
-          <button onClick={() => send("I'd like to talk to my teacher about something.")}>
+          <button disabled={busy} onClick={() => send("I'd like to talk to my teacher about something.")}>
             <Icon name="pencil" size={14} /> Talk to Teacher
           </button>
-          <button onClick={() => send("I'd like to contact school management.")}>
+          <button disabled={busy} onClick={() => send("I'd like to contact school management.")}>
             <Icon name="building" size={14} /> Contact School Management
           </button>
         </div>
@@ -209,6 +238,7 @@ export default function Chat({ session, onLogout, theme, onToggleTheme }: ChatPr
           <button
             type="button"
             className={`mic-btn ${listening ? "listening" : ""}`}
+            disabled={busy && !listening}
             onClick={() => (listening ? stopListening() : startListening())}
             title={listening ? "Stop listening" : "Speak your message"}
           >
@@ -219,9 +249,9 @@ export default function Chat({ session, onLogout, theme, onToggleTheme }: ChatPr
           value={listening ? interimTranscript || "Listening…" : input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="Type a message…"
-          disabled={sending || listening}
+          disabled={busy || listening}
         />
-        <button type="submit" disabled={sending || listening || !input.trim()}>
+        <button type="submit" disabled={busy || listening || !input.trim()}>
           Send <Icon name="arrowRight" size={15} />
         </button>
       </form>

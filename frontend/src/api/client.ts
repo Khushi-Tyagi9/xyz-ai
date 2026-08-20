@@ -79,10 +79,15 @@ interface StreamEvent {
   detail?: string;
 }
 
+const STREAM_STALL_MS = 45000;
+
 // Reads the newline-delimited JSON stream from POST /chat/stream, invoking onDelta as
 // text chunks arrive and resolving with the final structured result once the server
 // sends its "done" event. Network failures and mid-stream server errors both reject
-// with ApiError so the caller can show one consistent error UI.
+// with ApiError so the caller can show one consistent error UI. A watchdog aborts the
+// connection if no bytes arrive for STREAM_STALL_MS, so a silently-hung connection
+// (dropped mid-stream with neither an error nor a close) still surfaces as a retryable
+// error instead of leaving the caller waiting forever.
 export async function streamChat(
   token: string,
   session_id: string,
@@ -90,44 +95,63 @@ export async function streamChat(
   language: string,
   onDelta: (chunk: string) => void
 ): Promise<ChatResponse> {
-  const res = await safeFetch(`${BASE_URL}/chat/stream`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({ session_id, message, language }),
-  });
+  const controller = new AbortController();
+  let watchdog: ReturnType<typeof setTimeout>;
+  const resetWatchdog = () => {
+    clearTimeout(watchdog);
+    watchdog = setTimeout(() => controller.abort(), STREAM_STALL_MS);
+  };
+  resetWatchdog();
 
-  if (!res.ok || !res.body) {
-    const body = await res.json().catch(() => ({}));
-    throw new ApiError(body.detail || `Request failed: ${res.status}`, "http");
-  }
+  try {
+    const res = await safeFetch(`${BASE_URL}/chat/stream`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ session_id, message, language }),
+      signal: controller.signal,
+    });
 
-  const reader = res.body.getReader();
-  const decoder = new TextDecoder();
-  let buffer = "";
+    if (!res.ok || !res.body) {
+      const body = await res.json().catch(() => ({}));
+      throw new ApiError(body.detail || `Request failed: ${res.status}`, "http");
+    }
 
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    buffer += decoder.decode(value, { stream: true });
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
 
-    const lines = buffer.split("\n");
-    buffer = lines.pop() ?? "";
+    while (true) {
+      const { done, value } = await reader.read();
+      resetWatchdog();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
 
-    for (const line of lines) {
-      if (!line.trim()) continue;
-      const event: StreamEvent = JSON.parse(line);
-      if (event.type === "delta" && event.text) {
-        onDelta(event.text);
-      } else if (event.type === "done") {
-        return { reply: event.reply ?? "", flags: event.flags ?? [], escalation: event.escalation ?? null };
-      } else if (event.type === "error") {
-        throw new ApiError(event.detail || "The assistant hit an error mid-reply.", "http");
+      const lines = buffer.split("\n");
+      buffer = lines.pop() ?? "";
+
+      for (const line of lines) {
+        if (!line.trim()) continue;
+        const event: StreamEvent = JSON.parse(line);
+        if (event.type === "delta" && event.text) {
+          onDelta(event.text);
+        } else if (event.type === "done") {
+          return { reply: event.reply ?? "", flags: event.flags ?? [], escalation: event.escalation ?? null };
+        } else if (event.type === "error") {
+          throw new ApiError(event.detail || "The assistant hit an error mid-reply.", "http");
+        }
       }
     }
-  }
 
-  throw new ApiError("The connection closed before the assistant finished replying.", "network");
+    throw new ApiError("The connection closed before the assistant finished replying.", "network");
+  } catch (e) {
+    if (controller.signal.aborted) {
+      throw new ApiError("XYZ AI didn't respond in time. Please try again.", "network");
+    }
+    throw e;
+  } finally {
+    clearTimeout(watchdog);
+  }
 }
