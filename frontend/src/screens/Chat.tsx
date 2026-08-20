@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
-import { sendChat, type LoginResponse } from "../api/client";
+import { streamChat, ApiError, type LoginResponse } from "../api/client";
 import PersonaHeader from "../components/PersonaHeader";
 import AvatarStage from "../components/AvatarStage";
 import MessageBubble, { type ChatMessage } from "../components/MessageBubble";
@@ -35,7 +35,8 @@ export default function Chat({ session, onLogout, theme, onToggleTheme }: ChatPr
     },
   ]);
   const [sending, setSending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<{ message: string; retryable: boolean } | null>(null);
+  const [lastFailedMessage, setLastFailedMessage] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const { speak, speaking, supported: ttsSupported } = useSpeechSynthesis();
@@ -48,16 +49,44 @@ export default function Chat({ session, onLogout, theme, onToggleTheme }: ChatPr
     setInput("");
     setSending(true);
     setError(null);
+    setLastFailedMessage(null);
+
+    let streamedText = "";
+    let assistantTurnStarted = false;
 
     try {
-      const res = await sendChat(session.token, sessionId.current, trimmed, language);
-      setTurns((t) => [
-        ...t,
-        { message: { role: "assistant", text: res.reply }, escalation: res.escalation },
-      ]);
+      const res = await streamChat(session.token, sessionId.current, trimmed, language, (chunk) => {
+        streamedText += chunk;
+        setSending(false);
+        setTurns((t) => {
+          if (!assistantTurnStarted) {
+            assistantTurnStarted = true;
+            return [...t, { message: { role: "assistant", text: streamedText } }];
+          }
+          const next = [...t];
+          next[next.length - 1] = { message: { role: "assistant", text: streamedText } };
+          return next;
+        });
+      });
+
+      setTurns((t) => {
+        const next = [...t];
+        const finalTurn = { message: { role: "assistant" as const, text: res.reply }, escalation: res.escalation };
+        if (assistantTurnStarted) {
+          next[next.length - 1] = finalTurn;
+        } else {
+          next.push(finalTurn);
+        }
+        return next;
+      });
       if (voiceReplies) speak(res.reply, bcp47For(language));
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
+      const apiError = e instanceof ApiError ? e : null;
+      setError({
+        message: apiError?.message ?? (e instanceof Error ? e.message : String(e)),
+        retryable: !assistantTurnStarted,
+      });
+      if (!assistantTurnStarted) setLastFailedMessage(trimmed);
     } finally {
       setSending(false);
     }
@@ -131,7 +160,16 @@ export default function Chat({ session, onLogout, theme, onToggleTheme }: ChatPr
             <span className="typing-dots"><i /><i /><i /></span> XYZ AI is typing
           </div>
         )}
-        {error && <div className="error-banner">{error}</div>}
+        {error && (
+          <div className="error-banner error-banner-actions">
+            <span>{error.message}</span>
+            {error.retryable && lastFailedMessage && (
+              <button type="button" className="error-retry-btn" onClick={() => send(lastFailedMessage)}>
+                Retry
+              </button>
+            )}
+          </div>
+        )}
         <div ref={messagesEndRef} />
       </div>
 

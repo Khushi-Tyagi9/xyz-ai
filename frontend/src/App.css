@@ -519,6 +519,26 @@ body {
   border-radius: var(--radius-sm);
   font-size: 0.85rem;
 }
+.error-banner-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+.error-retry-btn {
+  flex-shrink: 0;
+  border: 1px solid var(--error-border);
+  background: var(--surface);
+  color: var(--error-text);
+  border-radius: var(--radius-sm);
+  padding: 0.25rem 0.65rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.error-retry-btn:hover {
+  background: var(--error-bg);
+}
 
 .escalation-card {
   background: var(--success-bg);

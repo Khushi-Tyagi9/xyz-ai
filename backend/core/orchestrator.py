@@ -153,3 +153,113 @@ def handle_turn(session, session_id: str, user_text: str, language: str) -> dict
     memory.append_message(session_id, "assistant", final_text)
 
     return {"reply": final_text, "flags": flags, "escalation": escalation_status}
+
+
+def handle_turn_stream(session, session_id: str, user_text: str, language: str):
+    """Generator version of handle_turn - yields event dicts as the reply streams in.
+
+    Each tool-calling round is itself requested with stream=True, since a Groq/OpenAI
+    streamed round can carry ordinary text deltas, tool-call deltas, or (rarely) both.
+    Text deltas are surfaced immediately via {"type": "delta"} events; tool-call deltas
+    are accumulated silently by index (id/name arrive once, `arguments` arrives in
+    fragments that must be concatenated) since partial JSON isn't meaningful to show.
+    A round with no accumulated tool calls means its content is the final answer.
+
+    Note: the secrets output filter only runs on the text persisted to memory and sent
+    in the final "done" event, not on the live deltas already streamed to the client -
+    filtering requires the complete text, which defeats streaming. This is an accepted
+    trade-off for a demo; the primary control (the model never sees the real API key)
+    is unaffected.
+    """
+    flags = input_guard.scan(user_text)
+    annotated_text = input_guard.annotate_if_suspicious(user_text, flags)
+
+    session_context = _build_session_context(session)
+    system_prompt = personas.build_system_prompt(session.role, session.name, language, session_context)
+    tool_specs = registry.openai_specs_for_role(session.role)
+
+    messages = [{"role": "system", "content": system_prompt}]
+    messages.extend(_history_as_messages(session_id))
+    messages.append({"role": "user", "content": annotated_text})
+
+    client = _get_client()
+    escalation_status = None
+    full_reply_parts: list[str] = []
+
+    for _ in range(_MAX_TOOL_ROUNDS):
+        stream = client.chat.completions.create(
+            model=_MODEL,
+            max_tokens=1024,
+            messages=messages,
+            tools=tool_specs if tool_specs else None,
+            tool_choice="auto" if tool_specs else None,
+            stream=True,
+        )
+
+        round_content = ""
+        tool_calls_acc: dict[int, dict] = {}
+
+        for chunk in stream:
+            delta = chunk.choices[0].delta
+            if delta.content:
+                round_content += delta.content
+                full_reply_parts.append(delta.content)
+                yield {"type": "delta", "text": delta.content}
+            if delta.tool_calls:
+                for tc_delta in delta.tool_calls:
+                    entry = tool_calls_acc.setdefault(tc_delta.index, {"id": None, "name": None, "arguments": ""})
+                    if tc_delta.id:
+                        entry["id"] = tc_delta.id
+                    if tc_delta.function and tc_delta.function.name:
+                        entry["name"] = tc_delta.function.name
+                    if tc_delta.function and tc_delta.function.arguments:
+                        entry["arguments"] += tc_delta.function.arguments
+
+        if not tool_calls_acc:
+            break
+
+        ordered_calls = [tool_calls_acc[i] for i in sorted(tool_calls_acc)]
+        messages.append({
+            "role": "assistant",
+            "content": round_content or None,
+            "tool_calls": [
+                {"id": c["id"], "type": "function", "function": {"name": c["name"], "arguments": c["arguments"]}}
+                for c in ordered_calls
+            ],
+        })
+
+        for tc in ordered_calls:
+            tool_name = tc["name"]
+            try:
+                tool_args = json.loads(tc["arguments"] or "{}")
+            except json.JSONDecodeError:
+                tool_args = {}
+
+            try:
+                check_permission(session, tool_name, tool_args)
+                impl = registry.get_impl(tool_name)
+                if impl is None:
+                    raise PermissionDeniedError(f"Unknown tool '{tool_name}'")
+                result = impl(session, tool_args)
+                if tool_name in ("request_teacher_call", "request_management_call") and result.get("status") not in ("needs_confirmation",):
+                    escalation_status = result
+                content = json.dumps(result)
+            except (PermissionDeniedError, school_api.NotFoundError) as e:
+                content = json.dumps({"error": str(e)})
+
+            messages.append({"role": "tool", "tool_call_id": tc["id"], "content": content})
+    else:
+        final_text = "I'm having trouble completing that request right now. Please try again or ask to speak with a teacher."
+        memory.append_message(session_id, "user", user_text)
+        memory.append_message(session_id, "assistant", final_text)
+        yield {"type": "delta", "text": final_text}
+        yield {"type": "done", "reply": final_text, "flags": flags, "escalation": escalation_status}
+        return
+
+    final_text = "".join(full_reply_parts).strip()
+    final_text = secrets.filter_response(final_text)
+
+    memory.append_message(session_id, "user", user_text)
+    memory.append_message(session_id, "assistant", final_text)
+
+    yield {"type": "done", "reply": final_text, "flags": flags, "escalation": escalation_status}
